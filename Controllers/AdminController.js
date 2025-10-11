@@ -1,6 +1,7 @@
 import Admin from "../Models/AdminModel.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
+import User from "../Models/UserModel.js";
 
 /**
  * @desc Admin Signup
@@ -36,7 +37,7 @@ export const adminSignup = async (req, res) => {
     const token = jwt.sign(
       { id: newAdmin._id, email: newAdmin.email, role: newAdmin.role },
       process.env.JWT_SECRET || "your_jwt_secret_key",
-      { expiresIn: "7d" }
+      { expiresIn: "30d" }
     );
 
     res.status(201).json({
@@ -83,7 +84,7 @@ export const adminLogin = async (req, res) => {
     const token = jwt.sign(
       { id: admin._id, email: admin.email, role: admin.role },
       process.env.JWT_SECRET || "your_jwt_secret_key",
-      { expiresIn: "7d" }
+      { expiresIn: "30d" }
     );
 
     res.status(200).json({
@@ -100,5 +101,47 @@ export const adminLogin = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
+
+export const createUserByAdmin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // Validate inputs
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email and password are required." });
+    }
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: "User already exists with this email." });
+    }
+
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    // Create user
+    const newUser = await User.create({
+      email,
+      password: hashedPassword,
+      role: "User",
+    });
+
+    res.status(200).json({
+      message: "User created successfully by Admin.",
+      user: {
+        id: newUser._id,
+        email: newUser.email,
+        role: newUser.role,
+      },
+    });
+  } catch (error) {
+    console.error("Error creating user:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
 
 
