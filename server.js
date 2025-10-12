@@ -3,13 +3,18 @@ import dotenv from 'dotenv';
 import ConnectDB from "./Config/ConnectDB.js"
 import cors from "cors";
 import cookieParser from "cookie-parser";
-
+import AdminRoute from "./Routes/AdminRoute.js";
+import UserRoute from "./Routes/UserRoute.js";
+import ProductRoute from "./Routes/ProductRoute.js";
+import CategoryRoute from "./Routes/CategoryRoute.js";
+import BillingRoute from "./Routes/BillingRoute.js";
+import OrderRoute from "./Routes/OrderRoute.js";
 
 const app = express();
 
 dotenv.config();
 app.use(cors({
-     origin: process.env.CLIENT_URL || "http://localhost:5173",
+    origin: process.env.CLIENT_URL || "http://localhost:5173",
     credentials: true,
 }));
 
@@ -20,7 +25,16 @@ app.use(express.json());
 app.use(cookieParser());
 
 
-app.get('/',(req,res)=>{
+
+app.use('/api/admin', AdminRoute)
+app.use('/api/user', UserRoute)
+app.use('/api/product', ProductRoute)
+app.use('/api/category', CategoryRoute)
+app.use('/api/billing', BillingRoute)
+app.use('/api/orders', OrderRoute)
+
+
+app.get('/', (req, res) => {
     res.send('Hello World!');
 })
 
