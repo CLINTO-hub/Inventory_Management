@@ -78,3 +78,125 @@ export const createProduct = async (req, res) => {
   }
 };
 
+
+export const updateProduct = async (req, res) => {
+  try {
+    const { id } = req.params; // Product ID from URL
+    const {
+      name,
+      description,
+      perDayPrice,
+      categoryId,
+      categoryName,
+      stock,
+      updatedBy, // Admin performing update
+    } = req.body;
+
+    // 1. Validate product existence
+    const existingProduct = await Product.findById(id);
+    if (!existingProduct) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    // 2. Validate admin performing the update
+    if (!updatedBy) {
+      return res.status(400).json({ message: "updatedBy is required" });
+    }
+
+    const adminExists = await Admin.findById(updatedBy).lean();
+    if (!adminExists) {
+      return res.status(404).json({ message: "Admin not found" });
+    }
+
+    // 3. Optional validations for incoming fields
+    if (name && !name.trim()) {
+      return res.status(400).json({ message: "Invalid product name" });
+    }
+    if (perDayPrice && (typeof perDayPrice !== "number" || perDayPrice <= 0)) {
+      return res.status(400).json({ message: "perDayPrice must be positive" });
+    }
+    if (stock && (typeof stock !== "number" || stock < 0)) {
+      return res.status(400).json({ message: "stock must be non-negative" });
+    }
+
+    // 4. Validate category if being changed
+    let newCategoryName = existingProduct.categoryName;
+    if (categoryId) {
+      const category = await Category.findById(categoryId).lean();
+      if (!category) {
+        return res.status(404).json({ message: "Category not found" });
+      }
+      newCategoryName = category.name;
+    }
+
+    // 5. Check duplicate name within same category (if name/category changes)
+    if (name || categoryId) {
+      const duplicate = await Product.findOne({
+        _id: { $ne: id },
+        categoryId: categoryId || existingProduct.categoryId,
+        name: { $regex: new RegExp("^" + (name || existingProduct.name) + "$", "i") },
+      }).lean();
+
+      if (duplicate) {
+        return res.status(409).json({ message: "Product name already exists in this category" });
+      }
+    }
+
+    // 6. Update product
+    const updatedProduct = await Product.findByIdAndUpdate(
+      id,
+      {
+        ...(name && { name: name.trim() }),
+        ...(description && { description }),
+        ...(perDayPrice && { perDayPrice }),
+        ...(stock !== undefined && { stock }),
+        ...(categoryId && { categoryId }),
+        ...(newCategoryName && { categoryName: newCategoryName }),
+      },
+      { new: true }
+    );
+
+    return res.status(200).json({
+      message: "Product updated successfully",
+      product: updatedProduct,
+    });
+  } catch (error) {
+    console.error("Error updating product:", error);
+    return res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+
+
+
+export const deleteProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { deletedBy } = req.body; // Admin performing deletion
+
+    // 1. Validate ID and admin
+    if (!deletedBy) {
+      return res.status(400).json({ message: "deletedBy is required" });
+    }
+
+    const adminExists = await Admin.findById(deletedBy).lean();
+    if (!adminExists) {
+      return res.status(404).json({ message: "Admin not found" });
+    }
+
+    // 2. Check product existence
+    const product = await Product.findById(id);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+    await Product.findByIdAndDelete(id);
+
+    return res.status(200).json({
+      message: "Product deleted successfully",
+      deletedProductId: id,
+    });
+  } catch (error) {
+    console.error("Error deleting product:", error);
+    return res.status(500).json({ message: "Server error", error: error.message });
+  }
+};

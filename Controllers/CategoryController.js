@@ -9,7 +9,7 @@ export const createCategory = async (req, res) => {
     // 1. Validate required fields
     if (!name || !createdBy) {
       return res.status(400).json({ message: "Name and createdBy are required" });
-    }
+    } 
 
     // 2. Check if Admin exists (reference validation)
     const adminExists = await Admin.findById(createdBy).lean();
@@ -124,5 +124,35 @@ export const deleteCategory = async (req, res) => {
   } catch (error) {
     console.error("Error deleting category:", error);
     return res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+export const getAllCategories = async (req, res) => {
+  try {
+    // Fetch all categories
+    const categories = await Category.find({})
+      .sort({ createdAt: -1 })
+      .lean();
+
+    if (!categories || categories.length === 0) {
+      return res.status(404).json({ message: "No categories found" });
+    }
+
+    // Map categories to match frontend structure
+    const formattedCategories = categories.map((cat, index) => ({
+      id: index + 1, // Auto incremented index for table display
+      _id: cat._id,  // Keep actual Mongo ID if needed for edit/delete actions
+      name: cat.name,
+      description: cat.description || "—",
+      createdAt: new Date(cat.createdAt).toLocaleDateString("en-GB"),
+    }));
+
+    res.status(200).json({
+      message: "Categories fetched successfully",
+      categories: formattedCategories,
+    });
+  } catch (error) {
+    console.error("Error fetching categories:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
