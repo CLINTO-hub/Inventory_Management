@@ -169,12 +169,15 @@ export const updateProduct = async (req, res) => {
 
 
 
+// ProductController.js
 export const deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
     const { deletedBy } = req.body; // Admin performing deletion
 
-    // 1. Validate ID and admin
+    if (!id) {
+      return res.status(400).json({ message: "Product ID is required" });
+    }
     if (!deletedBy) {
       return res.status(400).json({ message: "deletedBy is required" });
     }
@@ -184,11 +187,11 @@ export const deleteProduct = async (req, res) => {
       return res.status(404).json({ message: "Admin not found" });
     }
 
-    // 2. Check product existence
     const product = await Product.findById(id);
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
     }
+
     await Product.findByIdAndDelete(id);
 
     return res.status(200).json({
@@ -197,6 +200,26 @@ export const deleteProduct = async (req, res) => {
     });
   } catch (error) {
     console.error("Error deleting product:", error);
+    return res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+
+export const getallProducts = async (req, res) => {
+  try {
+    const products = await Product.find()
+      .populate("createdBy", "name email") // show admin info
+      .populate("categoryId", "name") // show category name
+      .sort({ createdAt: -1 }) // newest first
+      .lean();
+
+    return res.status(200).json({
+      message: "All products fetched successfully",
+      count: products.length,
+      products,
+    });
+  } catch (error) {
+    console.error("Error fetching all products:", error);
     return res.status(500).json({ message: "Server error", error: error.message });
   }
 };

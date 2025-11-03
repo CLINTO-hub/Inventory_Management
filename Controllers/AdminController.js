@@ -62,6 +62,8 @@ export const adminSignup = async (req, res) => {
 export const adminLogin = async (req, res) => {
   try {
     const { username, password } = req.body;
+  
+    
 
     // ✅ Validate input
     if (!username || !password) {
