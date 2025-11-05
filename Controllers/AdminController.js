@@ -155,3 +155,21 @@ export const createUserByAdmin = async (req, res) => {
 
 
 
+// @desc    Logout user
+// @route   POST /api/auth/logout
+export const logout = async (req, res) => {
+  try {
+    // Since we're using JWT, we can't actually "logout" on server
+    // Client will remove the token
+    res.json({
+      success: true,
+      message: 'Logout successful'
+    });
+  } catch (error) {
+    console.error('Logout error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error during logout'
+    });
+  }
+};

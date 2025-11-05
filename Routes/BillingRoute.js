@@ -1,5 +1,6 @@
 import express from "express";
 import { generateBill } from "../Controllers/BillingController.js";
+import { protect } from "../Middilewares/authMiddleware.js";
 
 const router = express.Router();
 
