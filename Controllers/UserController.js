@@ -46,3 +46,47 @@ export const userLogin = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
+// @desc    Get current user
+// @route   GET /api/auth/me
+export const getMe = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    
+    res.json({
+      success: true,
+      data: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }
+    });
+  } catch (error) {
+    console.error('Get user error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error',
+      error: error.message
+    });
+  }
+};
+
+// @desc    Logout user
+// @route   POST /api/auth/logout
+export const logout = async (req, res) => {
+  try {
+    // Since we're using JWT, we can't actually "logout" on server
+    // Client will remove the token
+    res.json({
+      success: true,
+      message: 'Logout successful'
+    });
+  } catch (error) {
+    console.error('Logout error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error during logout'
+    });
+  }
+};

@@ -231,14 +231,18 @@ export const updateOrder = async (req, res) => {
 // ✅ Get all orders
 export const getAllOrders = async (req, res) => {
   try {
+    console.log('kkkk');
+    
     const orders = await Order.find()
       .populate("productId", "name perDayPrice stock") // only select key product fields
       .populate("categoryId", "name") // populate category name
       .populate("createdBy", "name email") // populate user details
       .sort({ createdAt: -1 }); // latest first
 
+      console.log(orders,'orders');
+      
     if (!orders || orders.length === 0) {
-      return res.status(404).json({ message: "No orders found." });
+      return res.json({ message: "No orders found." });
     }
 
     return res.status(200).json({

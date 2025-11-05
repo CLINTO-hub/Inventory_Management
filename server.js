@@ -9,17 +9,19 @@ import ProductRoute from "./Routes/ProductRoute.js";
 import CategoryRoute from "./Routes/CategoryRoute.js";
 import BillingRoute from "./Routes/BillingRoute.js";
 import OrderRoute from "./Routes/OrderRoute.js";
+import DashboardRoute from "./Routes/DashboardRoute.js";
 
 const app = express();
 
 dotenv.config();
 
 app.use(cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
-    credentials: true,
-})); 
+  origin: "http://localhost:5173",
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true
+}));
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5001;
 
 app.use(express.json());
 app.use(cookieParser());
@@ -32,6 +34,7 @@ app.use('/api/product', ProductRoute)
 app.use('/api/category', CategoryRoute)
 app.use('/api/billing', BillingRoute)
 app.use('/api/orders', OrderRoute)
+app.use('/api/dashboard', DashboardRoute);
 
 
 app.get('/', (req, res) => {
