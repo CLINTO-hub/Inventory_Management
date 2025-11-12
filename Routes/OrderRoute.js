@@ -8,7 +8,7 @@ const router = express.Router();
 
 router.post('/createorder', createOrder)
 router.post('/cancelorder', cancelOrder)
-router.post('/returnorder', returnAfterRent)
+router.post('/returnorder/:id', returnAfterRent)
 router.post('/updateorder/:id', updateOrder)
 router.get('/getallorders', getAllOrders)
 

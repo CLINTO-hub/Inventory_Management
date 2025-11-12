@@ -143,26 +143,43 @@ export const returnAfterRent = async (req, res) => {
       });
     }
 
-    // Restore stock
-    const product = await Product.findById(order.productId);
-    if (product) {
-      product.stock += order.rentedAmount;
-      await product.save();
+    // ✅ Ensure productId is in the correct format
+    const productId =
+      order.productId?._id?.toString() || order.productId?.toString();
+
+    if (!productId) {
+      return res
+        .status(400)
+        .json({ message: "Product ID not found in order." });
     }
 
-    // Update order status
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({ message: "Product not found." });
+    }
+
+    // ✅ Restore stock correctly
+    product.stock = (product.stock || 0) + (order.rentedAmount || 0);
+    await product.save();
+
+   
+    
+
+    // ✅ Update order status
     order.orderStatus = "returned_after_rent";
     await order.save();
 
     return res.status(200).json({
-      message: "Order marked as returned and stock updated.",
+      message: "Order marked as returned and product stock updated successfully.",
       order,
+      updatedStock: product.stock,
     });
   } catch (error) {
     console.error("Error returning order:", error);
-    res.status(500).json({ message: "Internal Server Error" });
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
 
 
 export const updateOrder = async (req, res) => {
@@ -231,23 +248,40 @@ export const updateOrder = async (req, res) => {
 // ✅ Get all orders
 export const getAllOrders = async (req, res) => {
   try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 9;
+    const skip = (page - 1) * limit;
+    const search = req.query.search ? req.query.search.trim() : "";
 
-    
-    const orders = await Order.find()
-      .populate("productId", "name perDayPrice stock") // only select key product fields
-      .populate("categoryId", "name") // populate category name
-      .populate("createdBy", "name email") // populate user details
-      .sort({ createdAt: -1 }); // latest first
+    // ✅ Build search filter
+    const searchFilter = search
+      ? {
+          $or: [
+            { customerName: { $regex: search, $options: "i" } },
+            { customerPhoneNumber: { $regex: search, $options: "i" } },
+            { productName: { $regex: search, $options: "i" } },
+            { categoryName: { $regex: search, $options: "i" } },
+            { orderStatus: { $regex: search, $options: "i" } },
+            { paymentStatus: { $regex: search, $options: "i" } },
+          ],
+        }
+      : {};
 
-    
-      
-    if (!orders || orders.length === 0) {
-      return res.json({ message: "No orders found." });
-    }
+    const totalOrders = await Order.countDocuments(searchFilter);
+
+    const orders = await Order.find(searchFilter)
+      .populate("productId", "name perDayPrice stock")
+      .populate("categoryId", "name")
+      .populate("createdBy", "name email")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
 
     return res.status(200).json({
       message: "Orders fetched successfully.",
-      total: orders.length,
+      total: totalOrders,
+      currentPage: page,
+      totalPages: Math.ceil(totalOrders / limit),
       orders,
     });
   } catch (error) {
@@ -255,3 +289,5 @@ export const getAllOrders = async (req, res) => {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
+
