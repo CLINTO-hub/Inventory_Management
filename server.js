@@ -17,7 +17,6 @@ dotenv.config();
 
 app.use(cors({
   origin: "*", // Allow requests from any domain
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   credentials: true, 
 }));
 
