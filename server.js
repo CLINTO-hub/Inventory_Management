@@ -11,9 +11,14 @@ import BillingRoute from "./Routes/BillingRoute.js";
 import OrderRoute from "./Routes/OrderRoute.js";
 import DashboardRoute from "./Routes/DashboardRoute.js";
 
+dotenv.config();
+
+await ConnectDB()
+
+
 const app = express();
 
-dotenv.config();
+
 
 app.use(cors({
   origin: "*", // Allow requests from any domain
@@ -41,6 +46,6 @@ app.get('/', (req, res) => {
 })
 
 app.listen(PORT, () => {
-    ConnectDB();
+    
     console.log(`Server is running on port ${PORT}`);
 });    
