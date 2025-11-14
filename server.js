@@ -21,9 +21,13 @@ const app = express();
 
 
 app.use(cors({
-  origin: "*", // Allow requests from any domain
-  credentials: true, 
+  origin: [
+    "https://ammaconstructions.vercel.app",
+    "http://localhost:5173"
+  ],
+  credentials: true
 }));
+
 
 const PORT = process.env.PORT || 5001;
 
