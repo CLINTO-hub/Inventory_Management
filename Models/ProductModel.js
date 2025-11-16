@@ -1,3 +1,4 @@
+// Models/ProductModel.js
 import mongoose from "mongoose";
 
 const productSchema = new mongoose.Schema(
@@ -13,15 +14,13 @@ const productSchema = new mongoose.Schema(
     },
     perDayPrice: {
       type: Number,
-      required: true, // rate/day as given in PDF
+      required: true,
     },
-    // Reference to Admin who created this product
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Admin",
       required: true,
     },
-    // Reference to Category
     categoryId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Category",
@@ -29,13 +28,14 @@ const productSchema = new mongoose.Schema(
     },
     categoryName: {
       type: String,
-      required: true, // denormalized field for quick access
+      required: true,
       trim: true,
     },
-    stock:{
+    stock: {
       type: Number,
       required: true,
-    }
+      default: 0,
+    },
   },
   { timestamps: true }
 );

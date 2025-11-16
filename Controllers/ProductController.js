@@ -207,19 +207,32 @@ export const deleteProduct = async (req, res) => {
 
 export const getallProducts = async (req, res) => {
   try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    const totalProducts = await Product.countDocuments();
+
     const products = await Product.find()
-      .populate("createdBy", "name email") // show admin info
-      .populate("categoryId", "name") // show category name
-      .sort({ createdAt: -1 }) // newest first
+      .populate("categoryId", "name")
+      .populate("createdBy", "name email")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
       .lean();
 
     return res.status(200).json({
-      message: "All products fetched successfully",
-      count: products.length,
+      message: "Products fetched successfully",
+      currentPage: page,
+      totalPages: Math.ceil(totalProducts / limit),
+      totalProducts,
       products,
     });
+
   } catch (error) {
-    console.error("Error fetching all products:", error);
-    return res.status(500).json({ message: "Server error", error: error.message });
+    console.error("Error fetching products:", error);
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
   }
 };
