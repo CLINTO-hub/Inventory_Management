@@ -207,32 +207,47 @@ export const deleteProduct = async (req, res) => {
 
 export const getallProducts = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
+    const page = req.query.page ? parseInt(req.query.page) : null;
+    const limit = req.query.limit ? parseInt(req.query.limit) : null;
 
-    const totalProducts = await Product.countDocuments();
+    let products;
+    let totalProducts = await Product.countDocuments();
 
-    const products = await Product.find()
+    if (page && limit) {
+      const skip = (page - 1) * limit;
+      products = await Product.find()
+        .populate("categoryId", "name")
+        .populate("createdBy", "name email")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean();
+
+      return res.status(200).json({
+        message: "Products fetched successfully",
+        currentPage: page,
+        totalPages: Math.ceil(totalProducts / limit),
+        totalProducts,
+        products,
+      });
+    }
+
+    // 👉 No pagination → return all products (for order creation)
+    products = await Product.find()
       .populate("categoryId", "name")
       .populate("createdBy", "name email")
       .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
       .lean();
 
     return res.status(200).json({
-      message: "Products fetched successfully",
-      currentPage: page,
-      totalPages: Math.ceil(totalProducts / limit),
+      message: "All products fetched successfully",
       totalProducts,
       products,
     });
 
   } catch (error) {
     console.error("Error fetching products:", error);
-    return res
-      .status(500)
-      .json({ message: "Server error", error: error.message });
+    return res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
