@@ -448,3 +448,48 @@ export const getAllOrders = async (req, res) => {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
+
+export const deleteOrder = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+
+    
+    
+
+    const order = await Order.findById(orderId);
+
+    
+    
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    // 🔹 If order still on rent → restore remaining qty
+    if (order.orderStatus === "on_rent") {
+      for (const item of order.products) {
+        const remaining = getRemainingQty(item); // helper already defined 👍
+
+        if (remaining > 0) {
+          const product = await Product.findById(item.productId);
+          if (product) {
+            product.stock += remaining;
+            await product.save();
+          }
+        }
+      }
+    }
+
+    // 🔥 Finally delete the order
+    await Order.findByIdAndDelete(orderId);
+
+    return res.status(200).json({
+      message: "Order deleted successfully",
+      restoredStock: order.orderStatus === "on_rent",
+    });
+
+  } catch (error) {
+    console.error("Error deleting order:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};

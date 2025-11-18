@@ -175,6 +175,9 @@ export const deleteProduct = async (req, res) => {
     const { id } = req.params;
     const { deletedBy } = req.body; // Admin performing deletion
 
+    console.log(id ,deletedBy ,"data");
+    
+
     if (!id) {
       return res.status(400).json({ message: "Product ID is required" });
     }

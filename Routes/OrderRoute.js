@@ -1,5 +1,6 @@
 import express from "express";
-import { cancelOrder, createOrder, finalizeOrderReturn, getAllOrders, partialReturnProduct, returnAfterRent, updateOrder } from "../Controllers/OrderController.js";
+import { cancelOrder, createOrder, deleteOrder, finalizeOrderReturn, getAllOrders, partialReturnProduct, returnAfterRent, updateOrder } from "../Controllers/OrderController.js";
+
 
 
 
@@ -16,6 +17,7 @@ router.put("/:id/return", returnAfterRent);
 // New partial return & finalize
 router.put("/:orderId/return-product", partialReturnProduct);
 router.put("/:orderId/complete-return", finalizeOrderReturn);
+router.post("/:orderId/deleteproduct", deleteOrder)
 
 
 export default router;
